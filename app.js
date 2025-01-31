@@ -1,14 +1,14 @@
 const express = require('express')
 const mongoose = require('mongoose')
+
 require('dotenv').config()
+const mongoUri = process.env.MONGO_URI
 
 const bookRoutes = require('./routes/book')
 
-const mongoUri = process.env.MONGO_URI
-
 mongoose.connect(mongoUri)
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.error(err))
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(error => console.error("Error connecting to MongoDB:", error))
 
 const app = express()
 
