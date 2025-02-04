@@ -5,6 +5,7 @@ require('dotenv').config()
 const mongoUri = process.env.MONGO_URI
 
 const bookRoutes = require('./routes/book')
+const userRoutes = require('./routes/user')
 
 mongoose.connect(mongoUri)
   .then(() => console.log("Connected to MongoDB"))
@@ -22,5 +23,6 @@ app.use((req, res,next) => {
 app.use(express.json()) //same as body-parser
 
 app.use('/api/books', bookRoutes)
+app.use('/api/auth', userRoutes)
 
 module.exports = app
