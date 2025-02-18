@@ -1,7 +1,6 @@
 const bcrypt = require ('bcrypt')
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
-
 require('dotenv').config()
 
 exports.signup = (req, res, next) => {
@@ -27,7 +26,7 @@ exports.login = (req, res, next) => {
         bcrypt.compare(req.body.password, user.password)
         .then(valid => {
             if (!valid) {
-                res.status(401).json({message: "identifiant et/ou mot de passe incorrects"})
+                return res.status(401).json({message: "identifiant et/ou mot de passe incorrects"})
             }
                 res.status(200).json({
                     userId: user._id,
