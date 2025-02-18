@@ -1,21 +1,53 @@
 const multer = require('multer')
+const sharp = require('sharp')
+const path = require('path')
 
 const MIME_TYPES = {
-    'images/jpg': 'jpg',
-    'images/jpeg': 'jpeg',
-    'images/png': 'png',
-    'images/webp': 'webp'
+    'image/jpg': 'jpg',
+    'image/jpeg': 'jpeg',
+    'image/png': 'png',
+    'image/webp': 'webp'
 }
 
-const storage = multer.diskStorage({
-    destination: (req, file, callback) => {
-        callback(null, 'images')
-    },
-    filename: (req, file, callback) => {
-        const name = file.originalname.split(' ').join('_')
-        const extension = MIME_TYPES[file.mimetype]
-        callback(null, name + Date.now() + '.' + extension)
-    }
-})
+const storage = multer.memoryStorage()
 
-module.exports = multer({ storage: storage, limits: { fileSize: 2 * 1024 * 1024 } }).single('image')
+const fileFilter = (req, file, callback) => {
+    const isValid = !!MIME_TYPES[file.mimetype]
+    if (isValid) {
+        callback(null, true)
+    } else {
+        callback(new Error('Type de fichier invalide. Uniquement jpg, jpeg, png and webp autorisé'))
+    }
+}
+
+const upload = multer({ 
+    storage: storage, 
+    fileFilter: fileFilter 
+}).single('image')
+
+const optimizeImage = async (req, res, next) => {
+    if (!req.file) {
+        return next()
+    }
+
+    const name = req.file.originalname.split(' ').join('_').replace(/\.[^/.]+$/, "") 
+    const fileName = name + Date.now() + '.webp'
+    const filePath = path.join('images', fileName)
+
+    try {
+        //convert image to webp using sharp
+        await sharp(req.file.buffer)
+            .toFormat('webp')
+            .toFile(filePath)
+        
+        req.file.optimizedFileName = fileName
+        req.file.optimizedPath = filePath
+
+        next()
+    } catch (error) {
+        console.error('Erreur:', error)
+        res.status(500).send('Failed to process image')
+    }
+}
+
+module.exports = { upload, optimizeImage }

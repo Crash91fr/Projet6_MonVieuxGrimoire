@@ -9,7 +9,7 @@ exports.addBook = (req, res, next) => {
     const book = new Book({
       ...bookObject,
       userId: req.auth.userId,
-      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.optimizedFileName}`
     })
     
     book.save()
@@ -38,7 +38,7 @@ exports.getBestRated = (req, res, next) => {
 exports.editBook = (req, res, next) => {
     const bookObject = req.file ? {
         ...JSON.parse(req.body.book),
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.optimizedFileName}`
     } : { ...req.body }
     
     delete bookObject._userId
