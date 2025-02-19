@@ -35,9 +35,13 @@ const optimizeImage = async (req, res, next) => {
     const filePath = path.join('images', fileName)
 
     try {
-        //convert image to webp using sharp
+        
         await sharp(req.file.buffer)
-            .toFormat('webp')
+            .toFormat('webp', { quality: 80})
+            .resize(460, 595, {
+                fit: sharp.fit.inside,
+                withoutEnlargement: true,
+            })
             .toFile(filePath)
         
         req.file.optimizedFileName = fileName
