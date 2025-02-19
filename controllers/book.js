@@ -47,6 +47,16 @@ exports.editBook = (req, res, next) => {
             if (book.userId != req.auth.userId) {
                 res.status(401).json({ message: 'Unauthorized access'})
             } else {
+
+                if (req.file) {
+                    const oldImagePath = book.imageUrl.split(`${req.protocol}://${req.get('host')}/`)[1]
+                    fs.unlink(oldImagePath, (error) => {
+                        if (error) {
+                            console.error('Erreur lors de la suppression:', error)
+                        }
+                    })
+                }
+
                 Book.updateOne({ _id: req.params.id}, {...bookObject, _id: req.params.id})
                 .then(() => res.status(200).json({message : 'Livre modifié!'}))
                 .catch(error => res.status(401).json({ error }))
@@ -75,7 +85,31 @@ exports.deleteBook = (req, res, next) => {
 }
 
 exports.rateBook = (req, res, next) => {
-    console.log('notez le livre de 0 à 5 étoiles')
-}  
+    const userId = req.auth.userId
+    const rating = req.body.rating
+    const userRating = { userId, grade: rating }
+
+    Book.findOne({ _id: req.params.id})
+    .then(book => {
+        const alreadyRated = book.ratings.find(rating => rating.userId === userId)
+
+        if (alreadyRated) {
+            return res.status(409).json({message: 'Livre déjà évalué'}) // 409 Conflict 
+        } else { 
+            book.ratings.push(userRating)
+
+            const totalRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0)
+            const averageRating = totalRatings / book.ratings.length 
+
+            book.averageRating = Math.round(averageRating) 
+            
+            return book.save()
+                .then(updatedBook => res.status(200).json(updatedBook))
+                .catch(error => res.status(400).json({ error }))
+        }
+    })
+    .catch(error => res.status(400).json({ error }))
+}
+
 
 
